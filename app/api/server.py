@@ -37,10 +37,9 @@ class Server:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, dest='config', default='config.txt')
+    parser.add_argument('--config', type=str, dest='config',  default='config.txt')
 
     args = parser.parse_args()
-
     config = config_parser(args.config)
 
     server_host = config['SERVER_HOST']
