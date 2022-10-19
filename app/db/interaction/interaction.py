@@ -1,6 +1,7 @@
 from app.db.client.client import MySQLConnection
 from app.db.exceptions import UserNotFoundException
 from app.db.models.models import Base, User
+import sqlalchemy
 
 
 class DbInteraction:
@@ -21,16 +22,14 @@ class DbInteraction:
             self.create_table_users()
             self.create_table_musical_compositions()
 
-
-
     def create_table_users(self):
-        if not self.engine.dialect.has_table(self.engine, 'users'):
+        if not sqlalchemy.inspect(self.engine).has_table('users'):
             Base.metadata.tables['users'].create(self.engine)
         else:
             self.mysql_connection.execute_query('DROP TABLE IF EXISTS users')
 
     def create_table_musical_compositions(self):
-        if not self.engine.dialect.has_table(self.engine, 'musical_compositions'):
+        if not sqlalchemy.inspect(self.engine).has_table('musical_compositions'):
             Base.metadata.tables['musical_compositions'].create(self.engine)
         else:
             self.mysql_connection.execute_query('DROP TABLE IF EXISTS musical_compositions')
@@ -42,7 +41,7 @@ class DbInteraction:
             email=email
         )
         self.mysql_connection.session.add(user)
-        return True
+        return self.get_user_info(username)
 
     def get_user_info(self, username):
         user = self.mysql_connection.session.query(User).filter_by(username=username).first()
@@ -52,6 +51,19 @@ class DbInteraction:
         else:
             raise UserNotFoundException()
 
+    def edit_user_info(self, username, new_username=None, new_email=None, new_password=None):
+        user = self.mysql_connection.session.query(User).filter_by(username=username).first()
+        if user:
+            if new_username is not None:
+                user.username = new_username
+            if new_email is not None:
+                user.email = new_email
+            if new_password is not None:
+                user.password = new_password
+            return self.get_user_info(username if new_username is None else new_username)
+        else:
+            raise UserNotFoundException('User not found')
+
 
 if __name__ == '__main__':
     db = DbInteraction(
@@ -60,5 +72,7 @@ if __name__ == '__main__':
         user='root',
         password='pass',
         db_name='some_db',
-        rebuild_db=False
+        rebuild_db=True
     )
+
+    db.add_user_info('test', 'test', 'test')

@@ -20,7 +20,6 @@ class MySQLConnection:
             bind=self.connection.engine,
             autocommit=True,
             autoflush=True,
-            enable_backed_queries=False,
             expire_on_commit=True
         )
 
